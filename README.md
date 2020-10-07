@@ -41,7 +41,10 @@
     * [Imports](#imports)
     * [Read xlsx file](#read-xlsx-file)
     * [Read xlsx file from Asset Folder](#read-xlsx-from-flutters-asset-folder)
-    * [Apply password on xlsx file](#create-new-xlsx-file)
+    * [Apply password on xlsx file](#apply-password-protection-on-xlsx-file)
+    * [Remove password on xlsx file](#remove-password-protection-on-xlsx-file)
+    * [Saving xlsx file](#saving-xlsx-file)
+    * [Also checkout our other libraries](#also-checkout-our-other-libraries)
   - [Donate (Be the First one)](#donate-be-the-first-one)
 
 # Lets Get Started
