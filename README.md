@@ -163,13 +163,12 @@ Now in your `Dart` code, you can use:
     
 ````
 
-
 #### Also checkout our other libraries: 
   - Excel **··················**>  [Excel](https://www.github.com/justkawal/excel)
   - Text Animations **··**>  [AnimatedText](https://www.github.com/justkawal/animated_text)
   - Translations **········**>  [Arb Translator](https://www.github.com/justkawal/arb_translator)
 
-
-### Donate (Be the First one)
-Oooops, My laptop is **slow** but I'm not.
+### Donate
+Ooooops, My laptop is **slow**, but I'm not.
   - [Paypal](https://www.paypal.me/kawal7415)
+  - Not having Paypal account ?? [Join Now](https://www.paypal.com/in/flref?refBy=Pzpaa7qp041602067472432) and both of us could earn **`$10`**
