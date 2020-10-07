@@ -171,4 +171,5 @@ Now in your `Dart` code, you can use:
 
 
 ### Donate (Be the First one)
+Oooops, My laptop is **slow** but I'm not.
   - [Paypal](https://www.paypal.me/kawal7415)
