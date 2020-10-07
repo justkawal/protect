@@ -7,7 +7,7 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
-  xml_parser:
-  crypto:
-  utf:
-  aes_crypt:
+  xml_parser: ^0.1.2
+  crypto: ^2.1.5
+  utf: ^0.9.0+5
+  aes_crypt: ^0.1.1
