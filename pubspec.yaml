@@ -1,6 +1,6 @@
 name: protect
 description: Protect protects excel files with password and also helps to decrypt the password protected excel files
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/justkawal/protect
 
 environment:
