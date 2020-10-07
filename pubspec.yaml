@@ -1,9 +1,13 @@
 name: protect
-description: A new Flutter package project.
+description: Protect protects excel files with password and also helps to decrypt the password protected excel files
 version: 0.0.1
-homepage: https://github.com/kawal7415/protect.git
+homepage: https://github.com/justkawal/protect
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
+  xml_parser:
+  crypto:
+  utf:
+  aes_crypt:
