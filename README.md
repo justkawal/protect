@@ -163,6 +163,5 @@ Now in your `Dart` code, you can use:
     
 ````
 
-### Donate
-Help me speed up my build time..... 🔎 Help me buy Macbook Pro 16 M1 Max !!
+### Donate (Thanks for being kind)
   - [Paypal](https://www.paypal.me/kawal7415)
