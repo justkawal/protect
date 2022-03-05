@@ -121,9 +121,9 @@ Now in your `Dart` code, you can use:
 ````dart  
   ///
   /// Applying password protection
-  /// where `unprotectedExcelBytes` is Uint8List
+  /// where `unprotectedExcelBytes` is the bytes of unprotected excel
   ///
-  ProtectResponse encryptedResponse = await Protect.encryptUint8List(unprotectedExcelBytes, 'contact@kawal.dev');
+  ProtectResponse encryptedResponse = await Protect.encryptUint8List(unprotectedUint8List, 'contact@kawal.dev');
 
   var data;
   if (encryptedResponse.isDataValid) {
@@ -139,9 +139,9 @@ Now in your `Dart` code, you can use:
 ````dart  
   ///
   /// Applying password protection 
-  /// where `protectedExcelBytes` is Uint8List
+  /// where `protectedUint8List` is the bytes of encrypted excel
   ///
-  ProtectResponse decryptedResponse = await Protect.decryptUint8List(protectedExcelBytes, 'contact@kawal.dev');
+  ProtectResponse decryptedResponse = await Protect.decryptUint8List(protectedUint8List, 'contact@kawal.dev');
   
   var data;
   if (decryptedResponse.isDataValid) {
@@ -156,7 +156,7 @@ Now in your `Dart` code, you can use:
 ````dart
   // Save the Changes in file
   
-  var outputPath = '/Users/kawal/Desktop/form_encrypted_file.xlsx';
+  var outputPath = '/Path_to_excel_folder/form_encrypted_file.xlsx';
   await File(outputPath)
     ..create(recursive: true)
     ..writeAsBytes(data);
