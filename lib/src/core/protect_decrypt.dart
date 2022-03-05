@@ -14,26 +14,24 @@ ProtectResponse _decrypt(Uint8List encryptedBytes, String password) {
   var encryptedPackage, encryptedPackageInfo;
   for (var i = 0; i < file.FileIndex.length; i++) {
     var name = file.FileIndex[i].name.toString();
-    if (name.length > 0) {
+    if (name.isNotEmpty) {
       var nameSliced = name.substring(0, name.length - 1);
       if (nameSliced == 'EncryptedPackage') {
         encryptedPackage =
-            Uint8List.fromList(file.FileIndex[i].content.packageValue);
+            Uint8List.fromList(file.FileIndex[i].content!.packageValue);
       } else if (nameSliced == 'EncryptionInfo') {
-        encryptedPackageInfo = file.FileIndex[i].content.packageValue;
+        encryptedPackageInfo = file.FileIndex[i].content!.packageValue;
       }
     }
   }
-  final encryptionXml =
-      XmlDocument.fromString(utf8.decode(encryptedPackageInfo));
+  final encryptionXml = XmlDocument.from(utf8.decode(encryptedPackageInfo))!;
 
   final encryptionInfo = _extractKeys(encryptionXml);
 
   // KeyData
-  final keyData_blockSize =
-      int.tryParse(encryptionInfo['keyData']['blockSize']);
-  keyData_blockSize.assertNonNull;
-  final keyData_saltValue =
+  final keyDataBlockSize = int.tryParse(encryptionInfo['keyData']['blockSize']);
+  keyDataBlockSize.assertNonNull;
+  final keyDataSaltValue =
       base64.decode(encryptionInfo['keyData']['saltValue']);
 
   // DataIntegrity
@@ -43,24 +41,24 @@ ProtectResponse _decrypt(Uint8List encryptedBytes, String password) {
       base64.decode(encryptionInfo['dataIntegrity']['encryptedHmacValue']);
 
   // p:encryptedKey
-  final encryptedKey_spinCount =
+  final encryptedKeySpinCount =
       int.tryParse(encryptionInfo['p:encryptedKey']['spinCount']);
-  encryptedKey_spinCount.assertNonNull;
+  encryptedKeySpinCount.assertNonNull;
 
-  final encryptedKey_keyBits =
+  final encryptedKeyKeyBits =
       int.tryParse(encryptionInfo['p:encryptedKey']['keyBits']);
-  encryptedKey_keyBits.assertNonNull;
-  final encryptedKey_saltValue =
+  encryptedKeyKeyBits.assertNonNull;
+  final encryptedKeySaltValue =
       base64.decode(encryptionInfo['p:encryptedKey']['saltValue']);
-  final encryptedKey_encryptedKeyValue =
+  final encryptedKeyEncryptedKeyValue =
       base64.decode(encryptionInfo['p:encryptedKey']['encryptedKeyValue']);
 
   /// create key from the password
   var key = _convertPasswordToKey(
     password,
-    encryptedKey_saltValue,
-    encryptedKey_spinCount,
-    encryptedKey_keyBits,
+    encryptedKeySaltValue,
+    encryptedKeySpinCount!,
+    encryptedKeyKeyBits!,
     _BLOCK_KEYS['key'],
   );
 
@@ -68,16 +66,16 @@ ProtectResponse _decrypt(Uint8List encryptedBytes, String password) {
   var packageKey = _crypt(
     false,
     key,
-    encryptedKey_saltValue,
-    encryptedKey_encryptedKeyValue,
+    encryptedKeySaltValue,
+    encryptedKeyEncryptedKeyValue,
   );
 
   /// Verify the Hmac for data integrity
   ///
   /// create hmac iv
   var hmacKeyIV = _createIV(
-    keyData_saltValue,
-    keyData_blockSize,
+    keyDataSaltValue,
+    keyDataBlockSize!,
     _BLOCK_KEYS['dataIntegrity']['hmacKey'],
   );
 
@@ -94,8 +92,8 @@ ProtectResponse _decrypt(Uint8List encryptedBytes, String password) {
 
   // Next generate an initialization vector for encrypting the resulting HMAC value.
   var hmacValueIV = _createIV(
-    keyData_saltValue,
-    keyData_blockSize,
+    keyDataSaltValue,
+    keyDataBlockSize,
     _BLOCK_KEYS['dataIntegrity']['hmacValue'],
   );
 
@@ -128,14 +126,14 @@ ProtectResponse _decrypt(Uint8List encryptedBytes, String password) {
     isDataCorrupted = true;
   }
   if (isDataCorrupted) {
-    return ProtectResponse(isDataValid: false);
+    return const ProtectResponse(isDataValid: false);
   }
 
   var dec = Uint8List.fromList(encryptedPackage);
   var decrypted = _cryptPackage(
     false,
-    keyData_blockSize,
-    keyData_saltValue,
+    keyDataBlockSize,
+    keyDataSaltValue,
     packageKey,
     dec,
   );

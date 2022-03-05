@@ -1,13 +1,15 @@
 name: protect
-description: Protect protects excel files with password and also helps to decrypt the password protected excel files
-version: 0.0.2
+description: Protect encrypts/decrypt your excel files with password.
+version: 1.0.0
 homepage: https://github.com/justkawal/protect
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.16.0 <3.0.0"
 
 dependencies:
-  xml_parser: ^0.1.2
-  crypto: ^2.1.5
-  utf: ^0.9.0+5
-  aes_crypt: ^0.1.1
+  xml_parser: ^1.0.0
+  crypto: ^3.0.1
+  aes_crypt_null_safe: ^2.0.2
+
+dev_dependencies:
+  flutter_lints: ^1.0.4

@@ -3,14 +3,14 @@ library protect;
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:aes_crypt/aes_crypt.dart';
+import 'package:aes_crypt_null_safe/aes_crypt_null_safe.dart';
 import 'package:crypto/crypto.dart';
-import 'package:utf/utf.dart';
 import 'package:xml_parser/xml_parser.dart';
 import 'dart:math';
 
 ///
 /// utility files
+part 'src/utility/utf.dart';
 part 'src/utility/util.dart';
 part 'src/utility/protect_extensions.dart';
 part 'src/utility/methods.dart';

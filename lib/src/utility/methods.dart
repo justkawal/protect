@@ -91,7 +91,7 @@ Uint8List _cryptPackage(
     Uint8List key,
     Uint8List input) {
   // The first 8 bytes is supposed to be the length, but it seems like it is really the length - 4..
-  List<Uint8List> outputChunks = List<Uint8List>();
+  List<Uint8List> outputChunks = <Uint8List>[];
   int offset = encrypt ? 0 : _PACKAGE_OFFSET;
 
   // The package is encoded in chunks. Encrypt/decrypt each and concat.
@@ -141,7 +141,7 @@ Uint8List _cryptPackage(
 
 Uint8List _createIV(Uint8List saltValue, int blockSize, dynamic blockKey) {
   // Create the block key from the current index
-  var blockKey1;
+  late List<int> blockKey1;
   if (blockKey.runtimeType is int || blockKey is int) {
     blockKey1 = _int32bytes(blockKey);
   } else {
@@ -187,25 +187,26 @@ Uint8List _convertPasswordToKey(String password, Uint8List saltValue,
   } else if (key.length > keyBytes) {
     key = key.sublist(0, keyBytes);
   }
-  return key;
+  return Uint8List.fromList(key);
 }
 
 Uint8List _crypt(bool encrypt, Uint8List key, Uint8List iv, Uint8List input) {
   var crypt = AesCrypt();
   crypt.aesSetParams(key, iv, AesMode.cbc);
-  if (encrypt)
+  if (encrypt) {
     return crypt.aesEncrypt(input);
-  else
+  } else {
     return crypt.aesDecrypt(input);
+  }
 }
 
 Uint8List _hash(List<int> byte1, List<int> byte2) {
-  var myBytes = [byte1, byte2];
-  var bytes = Uint8List.fromList(toBuffer(myBytes));
-  return sha512.convert(bytes).bytes;
+  //var myBytes = [byte1, byte2];
+  //var bytes = Uint8List.fromList(toBuffer(myBytes));
+  return Uint8List.fromList(sha512.convert(toBuffer([byte1, byte2])).bytes);
 }
 
-Uint8List _int32bytes(int value, {int size: 4}) {
+Uint8List _int32bytes(int value, {int size = 4}) {
   var buf = Uint8List(size);
   int offset = 0;
   buf[offset++] = value;

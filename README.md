@@ -54,7 +54,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  protect: ^0.0.2
+  protect: ^1.0.0
 ```
 
 ### 2. Install it

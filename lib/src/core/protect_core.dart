@@ -3,7 +3,7 @@ part of protect;
 void prepBlob(_PROTECTBlob blob, int pos) => blob.l = pos;
 
 _PROTECTBlob newBuf(int sz) {
-  var o = _PROTECTBlob(List<int>(sz));
+  var o = _PROTECTBlob(List<int>.filled(sz, 0));
   prepBlob(o, 0);
   return o;
 }
@@ -15,14 +15,25 @@ class _PROTECT {
     for (var i = 0; i < Z; ++i) {
       c = L[i].length - R[i].length;
       if (c != 0) return c;
-      if (L[i] != R[i]) return L[i].toInt() < R[i].toInt() ? -1 : 1;
+      if (L[i] != R[i]) {
+        final Lp = L[i].toInt();
+        if (Lp == null) {
+          return -1;
+        }
+        final Rp = R[i].toInt();
+        if (Rp == null) {
+          return -1;
+        }
+        return L[i].toInt()! < R[i].toInt()! ? -1 : 1;
+      }
     }
     return L.length - R.length;
   }
 
   String dirname(String p) {
-    if (p.length - 1 >= 0 && p[p.length - 1] == '/')
-      return (p.slice(0, -1).indexOf('/') == -1) ? p : dirname(p.slice(0, -1));
+    if (p.length - 1 >= 0 && p[p.length - 1] == '/') {
+      return (!p.slice(0, -1).contains('/')) ? p : dirname(p.slice(0, -1));
+    }
     var c = p.lastIndexOf('/');
     return (c == -1) ? p : p.slice(0, c + 1);
   }
@@ -33,10 +44,11 @@ class _PROTECT {
     return (c == -1) ? p : p.slice(c + 1);
   }
 
-  _PROTECTContainer parse(List<int> file, [String root]) {
-    if (file.length < 512)
+  _PROTECTContainer parse(List<int> file /* , [String root] */) {
+    if (file.length < 512) {
       throw ArgumentError(
           '_PROTECT file size ' + file.length.toString() + ' < 512');
+    }
     int mver = 3;
     int ssz = 512;
     int nmfs = 0; // number of mini FAT sectors
@@ -78,9 +90,10 @@ class _PROTECT {
 
     // Number of Directory Sectors
     int dirCnt = blob.readShift(4, 'i');
-    if (mver == 3 && dirCnt != 0)
+    if (mver == 3 && dirCnt != 0) {
       throw ArgumentError(
           '# Directory Sectors: Expected 0 saw ' + dirCnt.toString());
+    }
 
     // Number of FAT Sectors
     blob.l += 4;
@@ -125,11 +138,11 @@ class _PROTECT {
     /** Chains */
     _SectorList sectorList = makeSectorList(sectors, dirStart, fatAddrs, ssz);
 
-    sectorList[dirStart.toString()].name = '!Directory';
+    sectorList[dirStart.toString()]!.name = '!Directory';
     if (nmfs > 0 && minifatStart != _ENDOFCHAIN) {
-      sectorList[minifatStart.toString()].name = '!MiniFAT';
+      sectorList[minifatStart.toString()]!.name = '!MiniFAT';
     }
-    sectorList[fatAddrs[0].toString()].name = '!FAT';
+    sectorList[fatAddrs[0].toString()]!.name = '!FAT';
     sectorList.fatAddrs = fatAddrs;
     sectorList.ssz = ssz;
 
@@ -142,7 +155,7 @@ class _PROTECT {
         minifatStart);
 
     buildFullPaths(FileIndex, FullPaths, Paths);
-    if (Paths.length > 0) {
+    if (Paths.isNotEmpty) {
       Paths.removeAt(0);
     }
 
@@ -177,14 +190,16 @@ class _PROTECT {
     // Sector Shift
     switch ((shift = blob.readShift(2))) {
       case 0x09:
-        if (mver != 3)
+        if (mver != 3) {
           throw ArgumentError(
               'Sector Shift: Expected 9 saw ' + shift.toString());
+        }
         break;
       case 0x0c:
-        if (mver != 4)
+        if (mver != 4) {
           throw ArgumentError(
               'Sector Shift: Expected 12 saw ' + shift.toString());
+        }
         break;
       default:
         throw ArgumentError(
@@ -201,8 +216,9 @@ class _PROTECT {
   List<List<int>> sectorify(List<int> file, int ssz) {
     int nsectors = (file.length / ssz).ceil() - 1;
     List<List<int>> sectors = <List<int>>[];
-    for (int i = 1; i < nsectors; ++i)
+    for (int i = 1; i < nsectors; ++i) {
       sectors.add(file.slice(i * ssz, (i + 1) * ssz));
+    }
     sectors.add(file.slice(nsectors * ssz));
     return sectors;
   }
@@ -220,9 +236,9 @@ class _PROTECT {
 
     for (; j < q.length; ++j) {
       i = q[j];
-      L = FI[i].L;
-      R = FI[i].R;
-      C = FI[i].C;
+      L = FI[i].L!;
+      R = FI[i].R!;
+      C = FI[i].C!;
       if (dad[i] == i) {
         if (L != -1 && dad[L] != L) dad[i] = dad[L];
         if (R != -1 && dad[R] != R) dad[i] = dad[R];
@@ -237,21 +253,25 @@ class _PROTECT {
         if (q.lastIndexOf(R) < j) q.add(R);
       }
     }
-    for (i = 1; i < pl; ++i)
+    for (i = 1; i < pl; ++i) {
       if (dad[i] == i) {
-        if (R != -1 && dad[R] != R)
+        if (R != -1 && dad[R] != R) {
           dad[i] = dad[R];
-        else if (L != -1 && dad[L] != L) dad[i] = dad[L];
+        } else if (L != -1 && dad[L] != L) {
+          dad[i] = dad[L];
+        }
       }
+    }
 
     for (i = 1; i < pl; ++i) {
       if (FI[i].type == 0) continue;
       j = i;
-      if (j != dad[j])
+      if (j != dad[j]) {
         do {
           j = dad[j];
           FP[i] = FP[j] + '/' + FP[i];
         } while (j != 0 && -1 != dad[j] && j != dad[j]);
+      }
       dad[i] = -1;
     }
 
@@ -262,8 +282,8 @@ class _PROTECT {
   }
 
   _PROTECTBlob getMfatEntry(
-      _PROTECTEntry entry, List<int> payload, List<int> mini) {
-    int start = entry.start, size = entry.size;
+      _PROTECTEntry entry, List<int> payload, List<int>? mini) {
+    int start = entry.start!, size = entry.size!;
     var o = <List<int>>[];
     int idx = start;
     while (mini != null && mini.isNotEmpty && size > 0 && idx >= 0) {
@@ -271,7 +291,7 @@ class _PROTECT {
       size -= _MSSZ;
       idx = readInt32LE(mini, idx * 4);
     }
-    if (o.length == 0) return newBuf(0);
+    if (o.isEmpty) return newBuf(0);
     return _PROTECTBlob(toBuffer(o).slice(0, entry.size));
   }
 
@@ -293,7 +313,7 @@ class _PROTECT {
   }
 
   _SectorEntry getSectorList(List<List<int>> sectors, int start,
-      List<int> fatAddrs, int ssz, List<bool> chkd) {
+      List<int> fatAddrs, int ssz, List<bool>? chkd) {
     List<int> buf = <int>[];
 
     List<List<int>> bufChain = <List<int>>[];
@@ -305,10 +325,13 @@ class _PROTECT {
       bufChain.add(sectors[j]);
       int addr = fatAddrs[(j * 4 / ssz).floor()];
       jj = ((j * 4) & modulus);
-      if (ssz < 4 + jj)
+      if (ssz < 4 + jj) {
         throw ArgumentError(
             'FAT boundary crossed: ' + j.toString() + ' 4 ' + ssz.toString());
-      if (sectors == null || sectors.isEmpty || addr >= sectors.length) break;
+      }
+      if (/* sectors == null || */ sectors.isEmpty || addr >= sectors.length) {
+        break;
+      }
       j = readInt32LE(sectors[addr], jj);
     }
     var sec = _SectorEntry();
@@ -332,7 +355,7 @@ class _PROTECT {
       buf = <int>[];
       k = (i + dirStart);
       if (k >= sl) k -= sl;
-      if (k < chkd.length && chkd[k] != null && chkd[k]) continue;
+      if (k < chkd.length && chkd[k] != null && chkd[k]!) continue;
       bufChain = [];
       Map<int, bool> seen = <int, bool>{};
       for (j = k; j >= 0;) {
@@ -342,12 +365,13 @@ class _PROTECT {
         bufChain.add(sectors[j]);
         int addr = fatAddrs[(j * 4 / ssz).floor()];
         jj = ((j * 4) & modulus);
-        if (ssz < 4 + jj)
+        if (ssz < 4 + jj) {
           throw ArgumentError(
               'FAT boundary crossed: ' + j.toString() + ' 4 ' + ssz.toString());
-        if (sectors[addr] == null) break;
+        }
+        //if (sectors[addr] == null) break;
         j = readInt32LE(sectors[addr], jj);
-        if (seen[j] != null && seen[j]) break;
+        if (seen[j] != null && seen[j]!) break;
       }
       var sec = _SectorEntry();
       sec.nodes = buf;
@@ -366,8 +390,8 @@ class _PROTECT {
       Map<String, _PROTECTEntry> files,
       List<_PROTECTEntry> FileIndex,
       int mini) {
-    int minifatStore = 0, pl = (Paths.length != 0 ? 2 : 0), i = 0, namelen = 0;
-    List<int> sector = sectorList['$dirStart'].data;
+    int minifatStore = 0, pl = (Paths.isNotEmpty ? 2 : 0), i = 0, namelen = 0;
+    List<int> sector = sectorList['$dirStart']!.data;
     String name;
     for (; i < sector.length; i += 128) {
       _PROTECTBlob blob = _PROTECTBlob(sector.slice(i, i + 128));
@@ -400,44 +424,46 @@ class _PROTECT {
       if (mtime != 0) o.mt = readDate(blob, blob.l - 8);
       o.start = blob.readShift(4, 'i');
       o.size = blob.readShift(4, 'i');
-      if (o.size < 0 && o.start < 0) {
+      if (o.size! < 0 && o.start! < 0) {
         o.size = o.type = 0;
         o.start = _ENDOFCHAIN;
         o.name = '';
       }
       if (o.type == 5) {
         /* root */
-        minifatStore = o.start;
-        if (nmfs > 0 && minifatStore != _ENDOFCHAIN)
-          sectorList[minifatStore.toString()].name = '!StreamData';
+        minifatStore = o.start!;
+        if (nmfs > 0 && minifatStore != _ENDOFCHAIN) {
+          sectorList[minifatStore.toString()]!.name = '!StreamData';
+        }
         /*minifat_size = o.size;*/
-      } else if (o.size >= 4096) {
+      } else if (o.size! >= 4096) {
         o.storage = 'fat';
-        if (sectorList['${o.start}'] == null)
+        if (sectorList['${o.start}'] == null) {
           sectorList[o.start.toString()] = getSectorList(
-              sectors, o.start, sectorList.fatAddrs, sectorList.ssz, null);
-        sectorList['${o.start}'].name = o.name;
+              sectors, o.start!, sectorList.fatAddrs, sectorList.ssz, null);
+        }
+        sectorList['${o.start}']!.name = o.name!;
         o.content =
-            _PROTECTBlob(sectorList['${o.start}'].data.slice(0, o.size));
+            _PROTECTBlob(sectorList['${o.start}']!.data.slice(0, o.size));
       } else {
         o.storage = 'minifat';
-        if (o.size < 0)
+        if (o.size! < 0) {
           o.size = 0;
-        else if (minifatStore != _ENDOFCHAIN &&
+        } else if (minifatStore != _ENDOFCHAIN &&
             o.start != _ENDOFCHAIN &&
             sectorList['$minifatStore'] != null) {
-          o.content = getMfatEntry(o, sectorList['$minifatStore'].data,
-              sectorList['$mini'] != null ? sectorList['$mini'].data : null);
+          o.content = getMfatEntry(
+              o, sectorList['$minifatStore']!.data, sectorList['$mini']?.data);
         }
       }
-      if (o.content != null) prepBlob(o.content, 0);
+      if (o.content != null) prepBlob(o.content!, 0);
       files[name] = o;
       FileIndex.add(o);
     }
   }
 
   DateTime readDate(blob, offset) {
-    return new DateTime(
+    return DateTime(
         0, // year
         0, // month
         0, // day
@@ -453,13 +479,16 @@ class _PROTECT {
 
   void init_protect(_PROTECTContainer protect) {
     String root = 'Root Entry';
-    if (protect.FullPaths == null || protect.FullPaths.isEmpty)
+    if (/* protect.FullPaths == null || */ protect.FullPaths.isEmpty) {
       protect.FullPaths = <String>[];
-    if (protect.FileIndex == null || protect.FileIndex.isEmpty)
+    }
+    if (/* protect.FileIndex == null || */ protect.FileIndex.isEmpty) {
       protect.FileIndex = <_PROTECTEntry>[];
-    if (protect.FullPaths.length != protect.FileIndex.length)
+    }
+    if (protect.FullPaths.length != protect.FileIndex.length) {
       throw ArgumentError('inconsistent _PROTECT structure');
-    if (protect.FullPaths.length == 0) {
+    }
+    if (protect.FullPaths.isEmpty) {
       protect.FullPaths.add(root + '/');
       var protectEntry = _PROTECTEntry();
       protectEntry.name = root;
@@ -485,11 +514,11 @@ class _PROTECT {
     entry.R = 69;
     entry.C = 69;
     protect.FileIndex.add(entry);
-    protect.FullPaths.add(protect.FullPaths[0] + nm);
+    protect.FullPaths.add(protect.FullPaths[0]! + nm);
     rebuild_protect(protect);
   }
 
-  void rebuild_protect(_PROTECTContainer protect, [bool f]) {
+  void rebuild_protect(_PROTECTContainer protect, [bool? f]) {
     init_protect(protect);
     var gc = false, s = false;
     int i = 0;
@@ -509,14 +538,14 @@ class _PROTECT {
         case 5:
           s = true;
           if ((_file.R == null || _file.L == null || _file.C == null) ||
-              (_file.R * _file.L * _file.C).isNaN) {
+              (_file.R! * _file.L! * _file.C!).isNaN) {
             gc = true;
           }
           if (_file.R != null &&
               _file.L != null &&
-              _file.R > -1 &&
-              _file.L > -1 &&
-              _file.R == _file.L) {
+              _file.R! > -1 &&
+              _file.L! > -1 &&
+              _file.R! == _file.L) {
             gc = true;
           }
           break;
@@ -527,8 +556,8 @@ class _PROTECT {
     }
     if (!gc && f != null && !f) return;
 
-    var now = new DateTime(1987, 1, 19), j = 0;
-    List<List<dynamic>> data = List<List<dynamic>>();
+    var now = DateTime(1987, 1, 19), j = 0;
+    List<List<dynamic>> data = <List<dynamic>>[];
     for (i = 0; i < protect.FullPaths.length; ++i) {
       if (protect.FileIndex[i].type == 0) continue;
       data.add([protect.FullPaths[i], protect.FileIndex[i]]);
@@ -536,7 +565,9 @@ class _PROTECT {
     for (i = 0; i < data.length; ++i) {
       String dad = dirname(data[i][0]);
       s = false;
-      for (j = 0; j < data.length; ++j) if (data[j][0] == dad) s = true;
+      for (j = 0; j < data.length; ++j) {
+        if (data[j][0] == dad) s = true;
+      }
       if (!s) {
         var entry = _PROTECTEntry();
         entry.name = filename(dad).replaceAll('/', '');
@@ -560,9 +591,9 @@ class _PROTECT {
       var elt = protect.FileIndex[i];
       var nm = protect.FullPaths[i];
 
-      elt.name = filename(nm).replaceAll('/', '');
+      elt.name = filename(nm!).replaceAll('/', '');
       elt.L = elt.R = elt.C = -(elt.color = 1);
-      elt.size = elt.content != null ? elt.content.length : 0;
+      elt.size = elt.content != null ? elt.content!.length : 0;
       elt.start = 0;
       elt.clsid = elt.clsid ?? _HEADER_CLSID;
       if (i == 0) {
@@ -570,17 +601,18 @@ class _PROTECT {
         elt.size = 0;
         elt.type = 5;
       } else if (nm.slice(-1) == '/') {
-        for (j = i + 1; j < data.length; ++j)
-          if (dirname(protect.FullPaths[j]) == nm) break;
+        for (j = i + 1; j < data.length; ++j) {
+          if (dirname(protect.FullPaths[j]!) == nm) break;
+        }
         elt.C = j >= data.length ? -1 : j;
-        for (j = i + 1; j < data.length; ++j)
-          if (dirname(protect.FullPaths[j]) == dirname(nm)) break;
+        for (j = i + 1; j < data.length; ++j) {
+          if (dirname(protect.FullPaths[j]!) == dirname(nm)) break;
+        }
         elt.R = j >= data.length ? -1 : j;
         elt.type = 1;
       } else {
-        if (dirname((i + 1) < protect.FullPaths.length &&
-                    protect.FullPaths[i + 1] != null
-                ? protect.FullPaths[i + 1]
+        if (dirname((i + 1) < protect.FullPaths.length
+                ? (protect.FullPaths[i + 1] ?? '')
                 : '') ==
             dirname(nm)) elt.R = i + 1;
         elt.type = 2;
@@ -590,17 +622,20 @@ class _PROTECT {
 
   dynamic _write(_PROTECTContainer protect) {
     rebuild_protect(protect);
-    myCustomFunction(_PROTECTContainer protect) {
+    List<int> myCustomFunction(_PROTECTContainer protect) {
       var mini_size = 0, fat_size = 0;
       for (var i = 0; i < protect.FileIndex.length; ++i) {
         var file = protect.FileIndex[i];
-        if (file.content == null) continue;
-        var flen = file.content.length;
+        if (file.content == null) {
+          continue;
+        }
+        var flen = file.content!.length;
         if (flen > 0) {
-          if (flen < 0x1000)
+          if (flen < 0x1000) {
             mini_size += (flen + 0x3F) >> 6;
-          else
+          } else {
             fat_size += (flen + 0x01FF) >> 9;
+          }
         }
       }
       var dir_cnt = (protect.FullPaths.length + 3) >> 2;
@@ -609,9 +644,10 @@ class _PROTECT {
       var fat_base = mini_cnt + fat_size + dir_cnt + mfat_cnt;
       var fat_cnt = (fat_base + 0x7F) >> 7;
       var difat_cnt = fat_cnt <= 109 ? 0 : ((fat_cnt - 109) / 0x7F).ceil();
-      while (((fat_base + fat_cnt + difat_cnt + 0x7F) >> 7) > fat_cnt)
+      while (((fat_base + fat_cnt + difat_cnt + 0x7F) >> 7) > fat_cnt) {
         difat_cnt = ++fat_cnt <= 109 ? 0 : ((fat_cnt - 109) / 0x7F).ceil();
-      var L = [
+      }
+      final L = <int>[
         1,
         difat_cnt,
         fat_cnt,
@@ -632,34 +668,46 @@ class _PROTECT {
     var o = newBuf(L[7] << 9);
     var i = 0, T = 0;
 
-    for (i = 0; i < 8; ++i) o.writeShift(1, _HEADER_SIG[i]);
-    for (i = 0; i < 8; ++i) o.writeShift(2, 0);
+    for (i = 0; i < 8; ++i) {
+      o.writeShift(1, _HEADER_SIG[i]);
+    }
+    for (i = 0; i < 8; ++i) {
+      o.writeShift(2, 0);
+    }
     o.writeShift(2, 0x003E);
     o.writeShift(2, 0x0003);
     o.writeShift(2, 0xFFFE);
     o.writeShift(2, 0x0009);
     o.writeShift(2, 0x0006);
-    for (i = 0; i < 3; ++i) o.writeShift(2, 0);
+    for (i = 0; i < 3; ++i) {
+      o.writeShift(2, 0);
+    }
     o.writeShift(4, 0);
     o.writeShift(4, L[2]);
     o.writeShift(4, L[0] + L[1] + L[2] + L[3] - 1);
     o.writeShift(4, 0);
     o.writeShift(4, 1 << 12);
-    o.writeShift(4, (L[3] ?? null) != 0 ? L[0] + L[1] + L[2] - 1 : _ENDOFCHAIN);
+    o.writeShift(
+        4, (L[3] /* ?? null */) != 0 ? L[0] + L[1] + L[2] - 1 : _ENDOFCHAIN);
     o.writeShift(4, L[3]);
-    o.writeShift(-4, (L[1] ?? null) != 0 ? L[0] - 1 : _ENDOFCHAIN);
+    o.writeShift(-4, (L[1] /* ?? null */) != 0 ? L[0] - 1 : _ENDOFCHAIN);
     o.writeShift(4, L[1]);
-    for (i = 0; i < 109; ++i) o.writeShift(-4, i < L[2] ? L[1] + i : -1);
+    for (i = 0; i < 109; ++i) {
+      o.writeShift(-4, i < L[2] ? L[1] + i : -1);
+    }
 
-    if ((L[1] ?? null) != 0) {
+    if ((L[1] /* ?? null */) != 0) {
       for (T = 0; T < L[1]; ++T) {
-        for (; i < 236 + T * 127; ++i)
+        for (; i < 236 + T * 127; ++i) {
           o.writeShift(-4, i < L[2] ? L[1] + i : -1);
+        }
         o.writeShift(-4, T == L[1] - 1 ? _ENDOFCHAIN : T + 1);
       }
     }
     void chainit(int w) {
-      for (T += w; i < T - 1; ++i) o.writeShift(-4, i + 1);
+      for (T += w; i < T - 1; ++i) {
+        o.writeShift(-4, i + 1);
+      }
       if (w != 0) {
         ++i;
         o.writeShift(-4, _ENDOFCHAIN);
@@ -667,45 +715,67 @@ class _PROTECT {
     }
 
     T = i = 0;
-    for (T += L[1]; i < T; ++i) o.writeShift(-4, _DIFSECT);
-    for (T += L[2]; i < T; ++i) o.writeShift(-4, _FATSECT);
+    for (T += L[1]; i < T; ++i) {
+      o.writeShift(-4, _DIFSECT);
+    }
+    for (T += L[2]; i < T; ++i) {
+      o.writeShift(-4, _FATSECT);
+    }
     chainit(L[3]);
     chainit(L[4]);
     var j = 0, flen = 0;
     var file = protect.FileIndex[0];
     for (; j < protect.FileIndex.length; ++j) {
       file = protect.FileIndex[j];
-      if (file.content == null) continue;
+      if (file.content == null) {
+        continue;
+      }
       /*:: if(file.content == null) throw new Error('unreachable'); */
-      flen = file.content.length;
-      if (flen < 0x1000) continue;
+      flen = file.content!.length;
+      if (flen < 0x1000) {
+        continue;
+      }
       file.start = T;
       chainit((flen + 0x01FF) >> 9);
     }
     chainit((L[6] + 7) >> 3);
-    while ((o.l & 0x1FF) != 0) o.writeShift(-4, _ENDOFCHAIN);
+    while ((o.l & 0x1FF) != 0) {
+      o.writeShift(-4, _ENDOFCHAIN);
+    }
     T = i = 0;
     for (j = 0; j < protect.FileIndex.length; ++j) {
       file = protect.FileIndex[j];
       if (file.content == null) continue;
       /*:: if(file.content == null) throw new Error('unreachable'); */
-      flen = file?.content?.length;
-      if (flen == null || flen == 0 || flen >= 0x1000) continue;
+      final tempFlen = file.content?.length;
+
+      if (tempFlen == null || tempFlen == 0 || tempFlen >= 0x1000) {
+        continue;
+      }
+      flen = tempFlen;
       file.start = T;
       chainit((flen + 0x3F) >> 6);
     }
-    while ((o.l & 0x1FF) != 0) o.writeShift(-4, _ENDOFCHAIN);
+    while ((o.l & 0x1FF) != 0) {
+      o.writeShift(-4, _ENDOFCHAIN);
+    }
     for (i = 0; i < (L[4] << 2); ++i) {
-      String nm = i < protect.FullPaths.length ? protect.FullPaths[i] : null;
-      if (nm == null || nm.length == 0) {
-        for (j = 0; j < 17; ++j) o.writeShift(4, 0);
-        for (j = 0; j < 3; ++j) o.writeShift(4, -1);
-        for (j = 0; j < 12; ++j) o.writeShift(4, 0);
+      String? nm = i < protect.FullPaths.length ? protect.FullPaths[i] : null;
+      if (nm == null || nm.isEmpty) {
+        for (j = 0; j < 17; ++j) {
+          o.writeShift(4, 0);
+        }
+        for (j = 0; j < 3; ++j) {
+          o.writeShift(4, -1);
+        }
+        for (j = 0; j < 12; ++j) {
+          o.writeShift(4, 0);
+        }
         continue;
       }
       file = protect.FileIndex[i];
-      if (i == 0) file.start = file.size != 0 ? file.start - 1 : _ENDOFCHAIN;
-      String _nm = file.name;
+      if (i == 0) file.start = file.size != 0 ? file.start! - 1 : _ENDOFCHAIN;
+      String _nm = file.name!;
       flen = 2 * (_nm.length + 1);
       o.writeShift(64, _nm, 'utf16le');
       o.writeShift(2, flen);
@@ -714,11 +784,14 @@ class _PROTECT {
       o.writeShift(-4, file.L);
       o.writeShift(-4, file.R);
       o.writeShift(-4, file.C);
-      if (file.clsid == null)
-        for (j = 0; j < 4; ++j) o.writeShift(4, 0);
-      else
+      if (file.clsid == null) {
+        for (j = 0; j < 4; ++j) {
+          o.writeShift(4, 0);
+        }
+      } else {
         o.writeShift(16, file.clsid, 'hex');
-      o.writeShift(4, file.state != null ? file.state : 0);
+      }
+      o.writeShift(4, file.state ?? 0);
       o.writeShift(4, 0);
       o.writeShift(4, 0);
       o.writeShift(4, 0);
@@ -730,26 +803,36 @@ class _PROTECT {
     for (i = 1; i < protect.FileIndex.length; ++i) {
       file = protect.FileIndex[i];
       /*:: if(!file.content) throw new Error('unreachable'); */
-      if (file.size >= 0x1000) {
-        o.l = (file.start + 1) << 9;
-        for (j = 0; j < file.size; ++j) o.writeShift(1, file.content[j]);
-        for (; (j & 0x1FF) != 0; ++j) o.writeShift(1, 0);
+      if (file.size! >= 0x1000) {
+        o.l = (file.start! + 1) << 9;
+        for (j = 0; j < file.size!; ++j) {
+          o.writeShift(1, file.content![j]);
+        }
+        for (; (j & 0x1FF) != 0; ++j) {
+          o.writeShift(1, 0);
+        }
       }
     }
     for (i = 1; i < protect.FileIndex.length; ++i) {
       file = protect.FileIndex[i];
       /*:: if(!file.content) throw new Error('unreachable'); */
-      if (file.size > 0 && file.size < 0x1000) {
-        for (j = 0; j < file.size; ++j) o.writeShift(1, file.content[j]);
-        for (; (j & 0x3F) != 0; ++j) o.writeShift(1, 0);
+      if (file.size! > 0 && file.size! < 0x1000) {
+        for (j = 0; j < file.size!; ++j) {
+          o.writeShift(1, file.content![j]);
+        }
+        for (; (j & 0x3F) != 0; ++j) {
+          o.writeShift(1, 0);
+        }
       }
     }
-    while (o.l < o.length) o.writeShift(1, 0);
+    while (o.l < o.length) {
+      o.writeShift(1, 0);
+    }
     return o;
   }
 
-  _PROTECTEntry find(_PROTECTContainer protect, String path) {
-    var UCFullPaths = protect.FullPaths.map((x) => x.toUpperCase()).toList();
+  _PROTECTEntry? find(_PROTECTContainer protect, String path) {
+    var UCFullPaths = protect.FullPaths.map((x) => x!.toUpperCase()).toList();
     var UCPaths = UCFullPaths.map((x) {
       var y = x.split('/');
       return y[y.length - (x.slice(-1) == '/' ? 2 : 1)];
@@ -758,8 +841,9 @@ class _PROTECT {
     if (path.codeUnitAt(0) == 47 /* '/' */) {
       k = true;
       path = UCFullPaths[0].slice(0, UCFullPaths[0].length - 1) + path;
-    } else
-      k = path.indexOf('/') != -1;
+    } else {
+      k = path.contains('/');
+    }
     var UCPath = path.toUpperCase();
     var w = k == true ? UCFullPaths.indexOf(UCPath) : UCPaths.indexOf(UCPath);
     if (w != -1) return protect.FileIndex[w];
@@ -794,9 +878,9 @@ class _PROTECT {
     var file = find(protect, name);
     if (file == null) {
       var fpath = protect.FullPaths[0];
-      if (name.slice(0, fpath.length) == fpath)
+      if (name.slice(0, fpath!.length) == fpath) {
         fpath = name;
-      else {
+      } else {
         if (fpath.slice(-1) != '/') fpath += '/';
         fpath = (fpath + name).replaceAll('//', '/');
       }
@@ -809,7 +893,9 @@ class _PROTECT {
     }
     /*:: if(!file) throw new Error('unreachable'); */
     file.content = _PROTECTBlob(content);
-    file.size = content != null && content.isNotEmpty ? content.length : 0;
+    file.size = /* content != null && */ content.isNotEmpty
+        ? content.length
+        : 0;
     return file;
   }
 

@@ -3,7 +3,7 @@ part of protect;
 Uint8List _buildEncryptionInfo(encryptionInfo) {
   var xmlEncryptionNode = XmlElement(
     name: 'encryption',
-    attributes: [
+    attributes: const [
       XmlAttribute(
           'xmlns', 'http://schemas.microsoft.com/office/2006/encryption'),
       XmlAttribute('xmlns:p',
@@ -49,7 +49,7 @@ Uint8List _buildEncryptionInfo(encryptionInfo) {
         children: [
           XmlElement(
             name: 'keyEncryptor',
-            attributes: [
+            attributes: const [
               XmlAttribute('uri',
                   'http://schemas.microsoft.com/office/2006/keyEncryptor/password')
             ],
@@ -95,12 +95,12 @@ Uint8List _buildEncryptionInfo(encryptionInfo) {
       ),
     ],
   );
-  var n = XmlDocument.fromString(
+  final n = XmlDocument.from(
           '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-              xmlEncryptionNode.toString())
+              xmlEncryptionNode.toString())!
       .toFormattedString();
 
-  var byte = [
+  final byte = [
     _ENCRYPTION_INFO_PREFIX,
     utf8.encode(n),
   ];

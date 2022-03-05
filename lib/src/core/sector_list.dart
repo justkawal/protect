@@ -1,24 +1,24 @@
 part of protect;
 
 class _SectorList {
-  String name;
-  List<int> _fatAddrs;
-  Map<String, _SectorEntry> _map = <String, _SectorEntry>{};
-  int ssz;
+  late String name;
+  List<int> _fatAddrs = <int>[];
+  final Map<String, _SectorEntry> _map = <String, _SectorEntry>{};
+  late int ssz;
 
-  _SectorEntry operator [](String _) {
-    return this._map[_] ?? null;
+  _SectorEntry? operator [](String key) {
+    return _map[key];
   }
 
-  operator []=(String key, _SectorEntry _) {
-    this._map[key] = _;
+  operator []=(String key, _SectorEntry entry) {
+    _map[key] = entry;
   }
 
   List<int> get fatAddrs {
-    return this._fatAddrs;
+    return _fatAddrs;
   }
 
-  set fatAddrs(List<int> _) {
-    this._fatAddrs = List<int>.from(_);
+  set fatAddrs(List<int> fatAddress) {
+    _fatAddrs = List<int>.from(fatAddress);
   }
 }

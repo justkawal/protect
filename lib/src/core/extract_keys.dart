@@ -35,12 +35,12 @@ Map<String, dynamic> _extractKeys(XmlDocument xml) {
 }
 
 Map<String, String> _extractParticularKeys(
-    XmlElement nodeElement, List<String> keys, String key) {
+    XmlElement? nodeElement, List<String> keys, String key) {
   nodeElement.assertNonNull;
 
   var keyDataMap = <String, String>{};
   for (var attributeName in keys) {
-    var value = nodeElement.getAttribute(attributeName);
+    var value = nodeElement?.getAttribute(attributeName);
     if (value != null) {
       keyDataMap[attributeName] = value;
     } else {

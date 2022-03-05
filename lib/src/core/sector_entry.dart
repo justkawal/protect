@@ -3,17 +3,13 @@ part of protect;
 class _SectorEntry {
   List<int> _data = <int>[];
   List<int> _nodes = <int>[];
-  String _name;
+  late String name;
 
-  List<int> get data => this._data;
+  List<int> get data => _data;
 
-  set data(List<int> _) => this._data = List<int>.from(_);
+  set data(List<int> _) => _data = List<int>.from(_);
 
-  List<int> get nodes => this._nodes;
+  List<int> get nodes => _nodes;
 
-  set nodes(List<int> _) => this._nodes = List<int>.from(_);
-
-  String get name => this._name;
-
-  set name(String _) => this._name = _;
+  set nodes(List<int> _) => _nodes = List<int>.from(_);
 }

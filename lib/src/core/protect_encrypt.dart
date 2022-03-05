@@ -3,7 +3,7 @@ part of protect;
 ProtectResponse _encrypt(Uint8List data, String password) {
   var packageKey = _Utils.createCryptoRandomUint8List(32);
 
-  var encryptionInfo = {
+  final encryptionInfo = {
     'package': {
       'cipherAlgorithm': 'AES',
       'cipherChaining': 'ChainingModeCBC',
@@ -29,8 +29,8 @@ ProtectResponse _encrypt(Uint8List data, String password) {
       //encryptionInfo['package']['cipherAlgorithm'],
       //encryptionInfo['package']['cipherChaining'],
       //encryptionInfo['package']['hashAlgorithm'],
-      encryptionInfo['package']['blockSize'],
-      encryptionInfo['package']['saltValue'],
+      encryptionInfo['package']!['blockSize'] as int,
+      encryptionInfo['package']!['saltValue'] as Uint8List,
       packageKey,
       data);
 
@@ -39,8 +39,8 @@ ProtectResponse _encrypt(Uint8List data, String password) {
   // Then create an initialization vector using the package encryption info and the approassertNonNullate block key.
   var hmacKeyIV = _createIV(
     //encryptionInfo['package']['hashAlgorithm'],
-    encryptionInfo['package']['saltValue'],
-    encryptionInfo['package']['blockSize'],
+    encryptionInfo['package']!['saltValue'] as Uint8List,
+    encryptionInfo['package']!['blockSize'] as int,
     _BLOCK_KEYS['dataIntegrity']['hmacKey'],
   );
 
@@ -60,8 +60,8 @@ ProtectResponse _encrypt(Uint8List data, String password) {
   // Next generate an initialization vector for encrypting the resulting HMAC value.
   var hmacValueIV = _createIV(
     //encryptionInfo['package']['hashAlgorithm'],
-    encryptionInfo['package']['saltValue'],
-    encryptionInfo['package']['blockSize'],
+    encryptionInfo['package']!['saltValue'] as Uint8List,
+    encryptionInfo['package']!['blockSize'] as int,
     _BLOCK_KEYS['dataIntegrity']['hmacValue'],
   );
 
@@ -87,19 +87,19 @@ ProtectResponse _encrypt(Uint8List data, String password) {
   var key = _convertPasswordToKey(
     password,
     //encryptionInfo['key']['hashAlgorithm'],
-    encryptionInfo['key']['saltValue'],
-    encryptionInfo['key']['spinCount'],
-    encryptionInfo['key']['keyBits'],
+    encryptionInfo['key']!['saltValue'] as Uint8List,
+    encryptionInfo['key']!['spinCount'] as int,
+    encryptionInfo['key']!['keyBits'] as int,
     _BLOCK_KEYS['key'],
   );
 
   // Encrypt the package key with the
-  encryptionInfo['key']['encryptedKeyValue'] = _crypt(
+  encryptionInfo['key']!['encryptedKeyValue'] = _crypt(
     true,
     //encryptionInfo['key']['cipherAlgorithm'],
     //encryptionInfo['key']['cipherChaining'],
     key,
-    encryptionInfo['key']['saltValue'],
+    encryptionInfo['key']!['saltValue'] as Uint8List,
     packageKey,
   );
 
@@ -112,19 +112,19 @@ ProtectResponse _encrypt(Uint8List data, String password) {
   var verifierHashInputKey = _convertPasswordToKey(
     password,
     //encryptionInfo.key.hashAlgorithm,
-    encryptionInfo['key']['saltValue'],
-    encryptionInfo['key']['spinCount'],
-    encryptionInfo['key']['keyBits'],
+    encryptionInfo['key']!['saltValue'] as Uint8List,
+    encryptionInfo['key']!['spinCount'] as int,
+    encryptionInfo['key']!['keyBits'] as int,
     _BLOCK_KEYS['verifierHash']['input'],
   );
 
   // Use the key to encrypt the verifier input
-  encryptionInfo['key']['encryptedVerifierHashInput'] = _crypt(
+  encryptionInfo['key']!['encryptedVerifierHashInput'] = _crypt(
     true,
     //encryptionInfo['key']['cipherAlgorithm'],
     //encryptionInfo['key']['cipherChaining'],
     verifierHashInputKey,
-    encryptionInfo['key']['saltValue'],
+    encryptionInfo['key']!['saltValue'] as Uint8List,
     verifierHashInput,
   );
 
@@ -135,19 +135,19 @@ ProtectResponse _encrypt(Uint8List data, String password) {
   var verifierHashValueKey = _convertPasswordToKey(
     password,
     // encryptionInfo.key.hashAlgorithm,
-    encryptionInfo['key']['saltValue'],
-    encryptionInfo['key']['spinCount'],
-    encryptionInfo['key']['keyBits'],
-    _BLOCK_KEYS['verifierHash']['value'],
+    encryptionInfo['key']!['saltValue'] as Uint8List,
+    encryptionInfo['key']!['spinCount'] as int,
+    encryptionInfo['key']!['keyBits'] as int,
+    _BLOCK_KEYS['verifierHash']!['value'],
   );
 
   // Use the key to encrypt the hash value
-  encryptionInfo['key']['encryptedVerifierHashValue'] = _crypt(
+  encryptionInfo['key']!['encryptedVerifierHashValue'] = _crypt(
     true,
     //encryptionInfo['key']['cipherAlgorithm'],
     //encryptionInfo['key']['cipherChaining'],
     verifierHashValueKey,
-    encryptionInfo['key']['saltValue'],
+    encryptionInfo['key']!['saltValue'] as Uint8List,
     verifierHashValue,
   );
 
